@@ -46,8 +46,4 @@ public interface CountriesInterface {
      */
     String getCountryNamesAsString();
 
-    /**
-     * Exports all countries to a JSON string using Gson
-     */
-    String exportCountriesToJson();
 }
