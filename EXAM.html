@@ -364,6 +364,10 @@ public SomeType getSomething() {
           <code>mvn clean install</code> from the command line.
         </div>
 
+        <div class="note">
+          <strong>Note on Java 25:</strong> Java 25 has module restrictions that prevent Gson from directly serializing <code>java.time.ZoneId</code> objects. The implementation above converts countries to simplified maps containing only serializable fields. This ensures the feature works without errors.
+        </div>
+
         <div class="git-command">
           git add . && git commit -m "build: add Gson dependency to pom.xml"
         </div>
@@ -384,6 +388,13 @@ public SomeType getSomething() {
         </p>
 
         <h3>Modifications to Make</h3>
+        <p>
+          <strong>Required Imports:</strong> Make sure your <code>CountriesInterfaceImpl</code> includes these imports at the top:
+          <pre><code>import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.util.Map;
+import java.util.stream.Collectors;</code></pre>
+        </p>
         <ol>
           <li>
             Add a new method to the <code>CountriesInterface</code>:
@@ -393,11 +404,26 @@ public SomeType getSomething() {
 String exportCountriesToJson();</code></pre>
           </li>
           <li>
-            Implement this method in <code>CountriesInterfaceImpl</code>:
+            Implement this method in <code>CountriesInterfaceImpl</code>. Due to Java 25 module restrictions on <code>java.time.ZoneId</code>, convert countries to simplified maps before serialization:
             <pre><code>@Override
 public String exportCountriesToJson() {
-    Gson gson = new Gson();
-    return gson.toJson(getCountries());
+    // Create a list of simplified country objects that Gson can serialize
+    List&lt;Object&gt; countryList = getCountries().stream()
+        .map(c -&gt; {
+            Map&lt;String, Object&gt; map = new java.util.LinkedHashMap&lt;&gt;();
+            map.put("code", c.code());
+            map.put("name", c.name());
+            map.put("capital", c.capital() != null ? c.capital() : "N/A");
+            map.put("region", c.region().toString());
+            map.put("population", c.population());
+            map.put("area", c.area() != null ? c.area().toString() : "N/A");
+            map.put("independent", c.independent());
+            return map;
+        })
+        .collect(Collectors.toList());
+    
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    return gson.toJson(countryList);
 }</code></pre>
           </li>
           <li>

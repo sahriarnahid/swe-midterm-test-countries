@@ -45,4 +45,9 @@ public interface CountriesInterface {
      * separated by commas. Use collectors to join the names.
      */
     String getCountryNamesAsString();
+
+    /**
+     * Exports all countries to a JSON string using Gson
+     */
+    String exportCountriesToJson();
 }
